@@ -18,7 +18,7 @@ function App() {
       </section>
 
       <section>
-        <CountdownTimer targetDate={new Date("2026-11-15")} />
+        <CountdownTimer targetDate={new Date("2025-11-30")} />
       </section>
 
       <section className="flex-col justify-center text-center py-10">
