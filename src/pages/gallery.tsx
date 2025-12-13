@@ -19,7 +19,7 @@ const items = generateRandomPhotos(20);
 function GalleryPage() {
   return (
     <>
-      <div className="flex align-center justify-center p-5 mb-">
+      <div className="flex align-center justify-center p-5 mb-5">
         <h1 className="text-3xl">Album</h1>
       </div>
 
