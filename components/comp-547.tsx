@@ -1,36 +1,19 @@
-import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react";
-import { formatBytes, useFileUpload } from "../hooks/use-file-upload";
-import { Button } from "../components/ui/button";
+import { useState } from "react"
+import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react"
+import { formatBytes, useFileUpload, type FileWithPreview } from "../hooks/use-file-upload"
+import { Button } from "../components/ui/button"
+import { uploadFile } from "../src/lib/storage"
 
-// Create some dummy initial files
-const initialFiles = [
-  {
-    name: "image-01.jpg",
-    size: 1528737,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=1",
-    id: "image-01-123456789",
-  },
-  {
-    name: "image-02.jpg",
-    size: 2345678,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=2",
-    id: "image-02-123456789",
-  },
-  {
-    name: "image-03.jpg",
-    size: 3456789,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=3",
-    id: "image-03-123456789",
-  },
-];
+type FileUploadProps = {
+  onFilesUploaded?: (files: FileWithPreview[]) => void
+  onUploadError?: (error: string) => void
+}
 
-export default function FileUpload() {
-  const maxSizeMB = 5;
-  const maxSize = maxSizeMB * 1024 * 1024; // 5MB default
-  const maxFiles = 6;
+export default function FileUpload({ onFilesUploaded, onUploadError }: FileUploadProps) {
+  const [isUploading, setIsUploading] = useState(false)
+  const maxSizeMB = 5
+  const maxSize = maxSizeMB * 1024 * 1024 // 5MB default
+  const maxFiles = 6
 
   const [
     { files, isDragging, errors },
@@ -49,8 +32,44 @@ export default function FileUpload() {
     maxSize,
     multiple: true,
     maxFiles,
-    initialFiles,
-  });
+    // Remove onFilesAdded - we'll upload manually instead
+  })
+
+  // Manual upload handler triggered by button click
+  const handleUploadClick = async () => {
+    if (files.length === 0) return
+
+    setIsUploading(true)
+    const uploadedFiles: FileWithPreview[] = []
+
+    try {
+      for (const fileWithPreview of files) {
+        // Only upload actual File objects, not FileMetadata
+        if (fileWithPreview.file instanceof File) {
+          const result = await uploadFile(fileWithPreview.file)
+
+          if (result.error) {
+            onUploadError?.(result.error)
+            console.error(`Failed to upload ${fileWithPreview.file.name}:`, result.error)
+          } else {
+            uploadedFiles.push(fileWithPreview)
+          }
+        }
+      }
+
+      // Notify parent component of successful uploads
+      if (uploadedFiles.length > 0) {
+        onFilesUploaded?.(uploadedFiles)
+        clearFiles() // Clear files after successful upload
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed'
+      onUploadError?.(errorMessage)
+      console.error('Upload error:', error)
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -68,6 +87,7 @@ export default function FileUpload() {
           {...getInputProps()}
           className="sr-only"
           aria-label="Upload image file"
+          disabled={isUploading}
         />
         <div className="flex flex-col items-center justify-center px-4 py-3 text-center">
           <div
@@ -80,9 +100,14 @@ export default function FileUpload() {
           <p className="text-muted-foreground text-xs">
             SVG, PNG, JPG or GIF (max. {maxSizeMB}MB)
           </p>
-          <Button variant="outline" className="mt-4" onClick={openFileDialog}>
+          <Button 
+            variant="outline" 
+            className="mt-4" 
+            onClick={openFileDialog}
+            disabled={isUploading}
+          >
             <UploadIcon className="-ms-1 opacity-60" aria-hidden="true" />
-            Select images
+            {isUploading ? "Uploading..." : "Select images"}
           </Button>
         </div>
       </div>
@@ -143,6 +168,18 @@ export default function FileUpload() {
               </Button>
             </div>
           )}
+
+          {/* Upload button */}
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleUploadClick}
+              disabled={isUploading || files.length === 0}
+              className="flex-1"
+            >
+              <UploadIcon className="-ms-1 opacity-60" aria-hidden="true" />
+              {isUploading ? "Uploading..." : `Upload ${files.length} ${files.length === 1 ? 'image' : 'images'}`}
+            </Button>
+          </div>
         </div>
       )}
 

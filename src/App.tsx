@@ -6,19 +6,19 @@ import { Footer } from "./components/footer";
 function App() {
   return (
     <>
-      <section className="relative h-145 bg-cover bg-center bg-[url('/wedding_hero.jpg')]">
+      <section className="relative h-lvh bg-cover bg-center bg-[url('/wedding_hero.jpg')]">
         <div className="absolute inset-0 bg-black/40"></div>
 
-        <div className="relative z-10 top-[25%] flex-col justify-center h-full text-center text-white px-6">
+        <div className="relative z-10 top-[25%] flex-col justify-center h-[87%] text-center text-white px-6">
           <span className="text-4xl font-semibold">Save the Date</span>
           <h1 className="text-9xl font-bold mb-4">We're Getting</h1>
           <h1 className="text-9xl font-bold mb-4">Married!</h1>
           <h3 className="text-6xl font-bold mb-4">On November 30th, 2025</h3>
         </div>
-      </section>
 
-      <section>
+        {/* <section> */}
         <CountdownTimer targetDate={new Date("2025-11-30")} />
+        {/* </section> */}
       </section>
 
       <section className="flex-col justify-center text-center py-10">
