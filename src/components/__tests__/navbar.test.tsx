@@ -23,7 +23,7 @@ describe("AppNavbar", () => {
       name: /confirma asistencia/i,
     });
 
-    //ASSERT: Veryfi they exist
+    //ASSERT: Verify they exist
     expect(homeLink).toBeInTheDocument();
     expect(rsvpLink).toBeInTheDocument();
     expect(galleryLink).toBeInTheDocument();
