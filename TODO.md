@@ -28,6 +28,8 @@
 - [x] Add contact information
 
 ## Final Polish
+- [ ] Deploy an initial version to static web hosting
+- [ ] Configure github actions for continuous deployment
 - [ ] Test all pages on mobile, tablet, and desktop
 - [ ] Verify RSVP form photo section responsiveness
 - [ ] Test navigation flow between all pages
