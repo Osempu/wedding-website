@@ -108,6 +108,9 @@ export async function listFiles(
     }
 
     // Get public URLs for all files, filtering out .emptyFolderPlaceholder
+    if (!data) {
+      return { files: [] }
+    }
     const files = data
       .filter(file => file.name !== '.emptyFolderPlaceholder') // Fix duplicate key error
       .map((file) => {
