@@ -4,7 +4,7 @@ services:
   wedding-site:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
       args:
         VITE_PUBLIC_SUPABASE_URL: ${VITE_PUBLIC_SUPABASE_URL}
         VITE_PUBLIC_SUPABASE_ANON_KEY: ${VITE_PUBLIC_SUPABASE_ANON_KEY}
