@@ -1,0 +1,111 @@
+name: Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Docker Build & Push"]
+    types:
+      - completed
+    branches:
+      - master
+      - first-deploy
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+
+    if: ${{ (github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch') }}
+
+    steps:
+      - name: Set image tag
+        id: image-tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            # Extract branch name from workflow_run event
+            BRANCH="${{ github.event.workflow_run.head_branch}}"
+            if [ "$BRANCH" = "master" ]; then
+              echo "tag=latest" >> $GITHUB_OUTPUT
+            else
+              echo "tag=$BRANCH" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      # Step 2: Pull the Docker image
+      - name: Pull Docker image
+        run: |
+          echo "Pulling image: ghcr.io/${{ github.repository }}:${{ steps.image-tag.outputs.tag}}"
+          docker pull ghcr.io/${{ github.repository }}:${{steps.image-tag.outputs.tag}}
+
+      # Step 3: Start Docker Container
+      - name: Start the container
+        run: |
+          docker run -d \
+            --name wedding-site-test \
+            -p 8080:80 \
+            ghcr.io/${{ github.repository }}:${{ steps.image-tag.outputs.tag }}
+
+            # Wait for container to be healthy
+            echo "Waiting for container to start..."
+            sleep 5
+
+            # Check container is running
+            docker ps | grep wedding-site-test
+
+      # Step 4 Test Critical Routes
+      - name: Test homepage (/)
+        run: |
+          echo "Testing homepage..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Homepage returned $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "✅ Homepage returned 200 OK"
+
+      - name: Test RSVP page (/rsvp)
+        run: |
+          echo "Testing RSVP page..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/rsvp)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ RSVP page returned $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "✅ RSVP page returned 200 OK"
+
+      - name: Test Gallery page (/gallery)
+        run: |
+          echo "Testing Gallery page..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/gallery)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Gallery page returned $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "✅ Gallery page returned 200 OK"
+
+      # Step 5: Check for NGINX errors
+      - name: Check container logs
+        run: |
+          echo "Container logs:"
+          docker logs wedding-site-test
+
+      # Step 6: Stop and remove container
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop wedding-site-test || true
+          docker rm wedding-site-test || true
+
+      # Step 7: Output test summary
+      - name: Test summary
+        run: |
+          echo "### ✅ Smoke Tests Passed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All critical routes returned 200 OK:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Homepage (/)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ RSVP page (/rsvp)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Gallery page (/gallery)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tested image:** ghcr.io/${{ github.repository }}:${{ steps.image-tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
