@@ -36,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghrcr.io/${{ github.repository}}
+          images: ghcr.io/${{ github.repository}}
           tags: |
             # Branch name tag (e.g., master, first-deploy)
             type=ref,event=branch
