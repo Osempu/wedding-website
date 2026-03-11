@@ -1,12 +1,22 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import FileUpload from "../../../components/comp-547";
+import { uploadFile } from "@/lib/storage";
+
+// Mock the storage module so uploadFile never hits real Supabase
+vi.mock("@/lib/storage", () => ({
+  uploadFile: vi.fn(),
+}));
 
 describe("FileUpload", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it("shows upload button when files are selected", async () => {
     const user = userEvent.setup();
-    const onFilesUploaded = vi.fn(); // Mock function
+    const onFilesUploaded = vi.fn();
 
     render(<FileUpload onFilesUploaded={onFilesUploaded} />);
 
@@ -27,13 +37,14 @@ describe("FileUpload", () => {
       screen.getByRole("button", { name: /upload 1 image/i }),
     ).toBeInTheDocument();
   });
+
   it("disables upload button during upload", async () => {
     const user = userEvent.setup();
-    const mockUpload = vi.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 1000)),
-    );
 
-    render(<FileUpload onFilesUploaded={mockUpload} />);
+    // Return a never-resolving promise so the component stays in the uploading state
+    vi.mocked(uploadFile).mockReturnValue(new Promise(() => {}));
+
+    render(<FileUpload onFilesUploaded={vi.fn()} />);
 
     const file = new File(["dummy"], "test.png", { type: "image/png" });
     const input = screen.getByLabelText(/upload image file/i);
@@ -42,10 +53,10 @@ describe("FileUpload", () => {
 
     const uploadButton = screen.getByRole("button", { name: /upload/i });
 
-    // Click upload
+    // Click upload – uploadFile is now pending, so the button should be disabled
     await user.click(uploadButton);
 
-    // Button should be disabled
+    // Button should be disabled while uploading
     expect(uploadButton).toBeDisabled();
     expect(uploadButton).toHaveTextContent(/uploading/i);
   });
