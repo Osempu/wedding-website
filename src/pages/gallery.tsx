@@ -1,46 +1,44 @@
-import { useEffect, useState } from "react"
-import Masonry from "../components/Components/Masonry/Masonry"
-import FileUpload from "../../components/comp-547"
-import { listFiles } from "@/lib/storage"
+import { useEffect, useState } from "react";
+import Masonry from "../components/Components/Masonry/Masonry";
+import FileUpload from "../../components/comp-547";
+import { listFiles } from "@/lib/storage";
 
 type GalleryItem = {
-  id: string
-  img: string
-  url: string
-  height: number
-}
+  id: string;
+  img: string;
+  url: string;
+  height: number;
+};
 
-function generateRandomPhotos(
-  count: number
-): Array<GalleryItem> {
+function generateRandomPhotos(count: number): Array<GalleryItem> {
   return Array.from({ length: count }, (_, i) => ({
     id: (i + 1).toString(),
     img: `https://picsum.photos/id/${Math.floor(
-      Math.random() * 1000
+      Math.random() * 1000,
     )}/600/900?grayscale`,
     url: `https://example.com/photo${i + 1}`,
     height: Math.floor(Math.random() * 500) + 200, // height between 200 and 700
-  }))
+  }));
 }
 
 function GalleryPage() {
-  const [items, setItems] = useState<GalleryItem[]>(generateRandomPhotos(20))
-  const [isLoading, setIsLoading] = useState(false)
-  const [uploadError, setUploadError] = useState<string>("")
+  const [items, setItems] = useState<GalleryItem[]>(generateRandomPhotos(20));
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>("");
 
   // Fetch uploaded images from Supabase on mount
   useEffect(() => {
-    loadGalleryImages()
-  }, [])
+    loadGalleryImages();
+  }, []);
 
   const loadGalleryImages = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const { files, error } = await listFiles()
-      
+      const { files, error } = await listFiles();
+
       if (error) {
-        console.error("Failed to load gallery images:", error)
-        return
+        console.error("Failed to load gallery images:", error);
+        return;
       }
 
       // Convert Supabase files to gallery items
@@ -49,33 +47,33 @@ function GalleryPage() {
         img: file.url,
         url: file.url,
         height: Math.floor(Math.random() * 500) + 200,
-      }))
+      }));
 
       // Prepend uploaded images to the gallery
       if (uploadedItems.length > 0) {
-        setItems((prev) => [...uploadedItems, ...prev])
+        setItems((prev) => [...uploadedItems, ...prev]);
       }
     } catch (error) {
-      console.error("Error loading gallery:", error)
+      console.error("Error loading gallery:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleFilesUploaded = async () => {
     // Reload the entire gallery to get fresh data from Supabase
-    await loadGalleryImages()
-  }
+    await loadGalleryImages();
+  };
 
   const handleUploadError = (error: string) => {
-    setUploadError(error)
-    setTimeout(() => setUploadError(""), 5000) // Clear error after 5 seconds
-  }
+    setUploadError(error);
+    setTimeout(() => setUploadError(""), 5000); // Clear error after 5 seconds
+  };
 
   return (
     <>
       <div className="flex align-center justify-center p-5 mb-5">
-        <h1 className="text-3xl">Album</h1>
+        <h1 className="text-3xl">Album de Fotografias</h1>
       </div>
 
       <div className="flex flex-col p-5 mx-auto md:w-6/12 sm:w-full">
@@ -85,7 +83,7 @@ function GalleryPage() {
             {uploadError}
           </div>
         )}
-        <FileUpload 
+        <FileUpload
           onFilesUploaded={handleFilesUploaded}
           onUploadError={handleUploadError}
         />
@@ -111,7 +109,7 @@ function GalleryPage() {
         />
       </div>
     </>
-  )
+  );
 }
 
 export default GalleryPage;
