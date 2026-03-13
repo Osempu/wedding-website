@@ -38,3 +38,5 @@ coverage-final.json
 .env.*.local
 # But commit the example
 !.env.example
+
+azure-env-settings.json
