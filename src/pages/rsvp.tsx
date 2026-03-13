@@ -65,7 +65,7 @@ function RSVPPage() {
         // Handle unique constraint violation for phone number
         if (error.code === "23505" && error.message.includes("phone_number")) {
           throw new Error(
-            "Ya existe una respuesta con este número de teléfono. Por favor usa un número diferente."
+            "Ya existe una respuesta con este número de teléfono. Por favor usa un número diferente.",
           );
         }
         throw error;
@@ -80,7 +80,7 @@ function RSVPPage() {
         setSubmitMessage(error.message);
       } else {
         setSubmitMessage(
-          "Hubo un error al guardar tu respuesta. Por favor intenta de nuevo."
+          "Hubo un error al guardar tu respuesta. Por favor intenta de nuevo.",
         );
       }
     } finally {
@@ -97,7 +97,7 @@ function RSVPPage() {
   return (
     <>
       <div className="flex align-center justify-center p-5 mb-5">
-        <h1 className="text-3xl">Esperamos Verte</h1>
+        <h1 className="text-3xl">Esperamos Verte (Cambio en Testing PR)</h1>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 w-full lg:w-4/5 xl:w-3/4 2xl:w-2/3 m-auto px-4 lg:px-0 mb-10">
